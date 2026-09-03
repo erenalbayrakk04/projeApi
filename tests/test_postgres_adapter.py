@@ -1,20 +1,16 @@
 """
 ==============================================================================
-PostgreSQL Adapter Birim ve Entegrasyon Testleri (Pytest & Mocking)
+Cosmic Python Repository Pattern & Adaptör Testleri
 ==============================================================================
-Bu test paketi, Clean Architecture prensiplerine uygun olarak geliştirilen
-PostgresDatabase adapter sınıfının:
-1. IDatabase ve Repository soyut sözleşmelerine (Interfaces) %100 uyumluluğunu,
-2. Veritabanı Fabrikası (DB Factory) seçim mekanizmasını (DB_TYPE),
-3. PostgreSQL DDL şema oluşturma ve CRUD operasyonlarını,
-4. Atomik sipariş, stok düşümü, iptal iadesi ve rollback mekanizmalarını
+Bu test paketi:
+1. SqlAlchemyDatabase adaptörünün IDatabase sözleşmesine %100 uyumluluğunu,
+2. Cosmic Python FakeRepository (In-Memory) deposunun sözleşme ve CRUD uyumluluğunu,
+3. Veritabanı Fabrikası (DB Factory) ve DatabaseProxy mekanizmasını
 doğrular.
 ==============================================================================
 """
 
 import os
-from unittest.mock import MagicMock, patch
-from datetime import datetime, timezone
 import pytest
 
 from interfaces.repositories import (
@@ -23,68 +19,60 @@ from interfaces.repositories import (
     ICategoryRepository,
     IOrderRepository,
 )
-from adapters.postgres_database import PostgresDatabase
-from database import SQLiteDatabase, get_database, _DatabaseProxy
+from adapters.sqlalchemy.database import SqlAlchemyDatabase
+from adapters.fake.fake_repository import FakeRepository
+from database import get_database, _DatabaseProxy
 
 
 # ==============================================================================
 # 1. Arayüz ve Sözleşme Uyumluluk Testleri (Interface Compliance)
 # ==============================================================================
-def test_postgres_database_implements_interfaces():
+def test_sqlalchemy_database_implements_interfaces():
     """
-    PostgresDatabase sınıfının IDatabase ve alt Repository arayüzlerini
+    SqlAlchemyDatabase sınıfının IDatabase ve alt Repository arayüzlerini
     eksiksiz implemente ettiğini doğrular.
     """
-    assert issubclass(PostgresDatabase, IDatabase)
-    assert issubclass(PostgresDatabase, IProductRepository)
-    assert issubclass(PostgresDatabase, ICategoryRepository)
-    assert issubclass(PostgresDatabase, IOrderRepository)
+    assert issubclass(SqlAlchemyDatabase, IDatabase)
+    assert issubclass(SqlAlchemyDatabase, IProductRepository)
+    assert issubclass(SqlAlchemyDatabase, ICategoryRepository)
+    assert issubclass(SqlAlchemyDatabase, IOrderRepository)
 
-    # Örnek oluşturulduğunda soyut metot eksiği olmamalıdır
-    db_instance = PostgresDatabase(
-        host="localhost",
-        port=5432,
-        database="test_db",
-        user="test_user",
-    )
+    db_instance = SqlAlchemyDatabase("sqlite:///:memory:")
     assert isinstance(db_instance, IDatabase)
     assert isinstance(db_instance, IProductRepository)
     assert isinstance(db_instance, ICategoryRepository)
     assert isinstance(db_instance, IOrderRepository)
 
 
+def test_fake_repository_implements_interfaces():
+    """
+    Cosmic Python FakeRepository sınıfının IDatabase arayüzünü
+    eksiksiz uyguladığını doğrular.
+    """
+    assert issubclass(FakeRepository, IDatabase)
+    assert issubclass(FakeRepository, IProductRepository)
+    assert issubclass(FakeRepository, ICategoryRepository)
+    assert issubclass(FakeRepository, IOrderRepository)
+
+    fake_db = FakeRepository()
+    assert isinstance(fake_db, IDatabase)
+
+
 # ==============================================================================
 # 2. Veritabanı Fabrikası (DB Factory) Testleri
 # ==============================================================================
-def test_db_factory_returns_sqlite_by_default(monkeypatch):
+def test_db_factory_returns_database_instance(monkeypatch):
     """
-    DB_TYPE tanımlı değilken veya 'sqlite' iken SQLiteDatabase döndüğünü test eder.
+    get_database() çağrısının IDatabase uygulayan bir adaptör döndüğünü doğrular.
     """
-    monkeypatch.delenv("DB_TYPE", raising=False)
     import database
-    database._sqlite_instance = None
-    database._postgres_instance = None
+    database._active_database_instance = None
 
     db = get_database()
-    assert isinstance(db, SQLiteDatabase)
-
-
-def test_db_factory_returns_postgres_when_configured(monkeypatch):
-    """
-    DB_TYPE='postgres' olarak ayarlandığında PostgresDatabase döndüğünü test eder.
-    """
-    monkeypatch.setenv("DB_TYPE", "postgres")
-    import database
-    database._sqlite_instance = None
-    database._postgres_instance = None
-
-    db = get_database()
-    assert isinstance(db, PostgresDatabase)
-
-    # Temizle ve normale dön
-    monkeypatch.setenv("DB_TYPE", "sqlite")
-    database._sqlite_instance = None
-    database._postgres_instance = None
+    assert isinstance(db, IDatabase)
+    assert hasattr(db, "get_all")
+    assert hasattr(db, "add_category")
+    assert hasattr(db, "create_order_atomic")
 
 
 def test_database_proxy_delegation():
@@ -94,7 +82,6 @@ def test_database_proxy_delegation():
     import database
     proxy = database.db
     assert repr(proxy).startswith("<DatabaseProxy")
-    # clear veya get_all fonksiyonları proxy üzerinden erişilebilir olmalıdır
     assert hasattr(proxy, "clear")
     assert hasattr(proxy, "get_all")
     assert hasattr(proxy, "add_category")
@@ -102,210 +89,51 @@ def test_database_proxy_delegation():
 
 
 # ==============================================================================
-# 3. PostgreSQL Adapter Parametre ve Şema Testleri
+# 3. Cosmic Python Fake Repository CRUD ve Atomik Sipariş Testleri
 # ==============================================================================
-def test_postgres_database_config():
+def test_fake_repository_crud_flow():
     """
-    PostgreSQL yapılandırma parametrelerinin doğru okunduğunu test eder.
+    FakeRepository üzerinde Kategori, Ürün ve Sipariş işlemlerinin
+    in-memory olarak hatasız çalıştığını test eder.
     """
-    db = PostgresDatabase(
-        host="custom_host",
-        port=5433,
-        database="custom_db",
-        user="custom_user",
-        password="test_secret_token",
+    fake = FakeRepository()
+    fake.clear()
+
+    # 1. Kategori Ekle
+    cat = fake.add_category({"name": "Test Kategori", "description": "Açıklama"})
+    assert cat["id"] == 1
+    assert cat["name"] == "Test Kategori"
+
+    # 2. Ürün Ekle
+    prod = fake.add({
+        "name": "Test Klavye",
+        "description": "RGB",
+        "price": 500.0,
+        "stock": 10,
+        "category_ids": [1],
+        "is_active": True,
+    })
+    assert prod["id"] == 1
+    assert prod["stock"] == 10
+
+    # 3. Sipariş Oluştur
+    order = fake.create_order_atomic(
+        customer_email="test@example.com",
+        items_data=[{"product_id": 1, "quantity": 3}],
     )
-    assert db.host == "custom_host"
-    assert db.port == 5433
-    assert db.database == "custom_db"
-    assert db.user == "custom_user"
-    assert db.password == "test_secret_token"
+    assert order["id"] == 1
+    assert order["total_amount"] == 1500.0
 
+    # Stok kontrolü (10 - 3 = 7 kalmalı)
+    updated_prod = fake.get_by_id(1)
+    assert updated_prod is not None
+    assert updated_prod["stock"] == 7
 
-def test_postgres_init_db_creates_tables():
-    """
-    init_db metodunun PostgreSQL uyumlu DDL komutlarını çalıştırdığını doğrular.
-    """
-    db = PostgresDatabase()
-    mock_conn = MagicMock()
-    mock_cursor = MagicMock()
-    mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
+    # 4. Sipariş İptali ve Stok İadesi
+    cancelled_order = fake.update_order_status_atomic(order["id"], "CANCELLED")
+    assert cancelled_order is not None
+    assert cancelled_order["status"] == "CANCELLED"
 
-    with patch.object(db, "_get_connection") as mock_get_conn:
-        mock_get_conn.return_value.__enter__.return_value = mock_conn
-        db.init_db()
-
-        # DDL sorgularının çalıştırıldığını doğrula
-        assert mock_cursor.execute.call_count >= 5
-        mock_conn.commit.assert_called()
-
-
-# ==============================================================================
-# 4. Kategori (Category) CRUD ve İş Mantığı Testleri
-# ==============================================================================
-def test_postgres_category_crud():
-    """
-    PostgresDatabase üzerinde kategori ekleme, getirme ve güncelleme mantığını test eder.
-    """
-    db = PostgresDatabase()
-    now = datetime.now(timezone.utc)
-
-    # 1. add_category
-    with patch.object(db, "_get_connection") as mock_get_conn:
-        mock_conn = MagicMock()
-        mock_cursor = MagicMock()
-        mock_cursor.fetchone.return_value = {"id": 1}
-        mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
-        mock_get_conn.return_value.__enter__.return_value = mock_conn
-
-        with patch.object(db, "get_category_by_id") as mock_get_id:
-            mock_get_id.return_value = {
-                "id": 1,
-                "name": "Elektronik",
-                "description": "Elektronik ürünler",
-                "created_at": now.isoformat(),
-            }
-            cat = db.add_category({"name": "Elektronik", "description": "Elektronik ürünler"})
-            assert cat["id"] == 1
-            assert cat["name"] == "Elektronik"
-
-    # 2. get_category_by_name
-    with patch.object(db, "_get_connection") as mock_get_conn:
-        mock_conn = MagicMock()
-        mock_cursor = MagicMock()
-        mock_cursor.fetchone.return_value = {
-            "id": 1,
-            "name": "Elektronik",
-            "description": "Elektronik ürünler",
-            "created_at": now,
-        }
-        mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
-        mock_get_conn.return_value.__enter__.return_value = mock_conn
-
-        found = db.get_category_by_name("elektronik")
-        assert found is not None
-        assert found["id"] == 1
-        assert found["name"] == "Elektronik"
-
-    # 3. delete_category
-    with patch.object(db, "get_category_by_id", return_value={"id": 1}):
-        with patch.object(db, "_get_connection") as mock_get_conn:
-            mock_conn = MagicMock()
-            mock_cursor = MagicMock()
-            mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
-            mock_get_conn.return_value.__enter__.return_value = mock_conn
-
-            deleted = db.delete_category(1)
-            assert deleted is True
-            mock_conn.commit.assert_called()
-
-
-# ==============================================================================
-# 5. Ürün (Product) CRUD ve Many-to-Many Kategori Testleri
-# ==============================================================================
-def test_postgres_product_add_validation_and_crud():
-    """
-    PostgresDatabase üzerinde ürün ekleme, kategori doğrulama ve silme testleri.
-    """
-    db = PostgresDatabase()
-    now = datetime.now(timezone.utc)
-
-    # Kategori ID verilmediğinde hata fırlatmalı
-    with pytest.raises(ValueError, match="en az bir geçerli kategori ID'si"):
-        db.add({"name": "Ürün 1", "price": 100, "stock": 10, "category_ids": []})
-
-    # Geçerli ürün ekleme
-    with patch.object(db, "_get_connection") as mock_get_conn:
-        mock_conn = MagicMock()
-        mock_cursor = MagicMock()
-        # 1. kategori var kontrolü, 2. insert returning id
-        mock_cursor.fetchone.side_effect = [{"id": 1}, {"id": 10}]
-        mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
-        mock_get_conn.return_value.__enter__.return_value = mock_conn
-
-        with patch.object(db, "get_by_id") as mock_get_by_id:
-            mock_get_by_id.return_value = {
-                "id": 10,
-                "name": "Oyuncu Faresi",
-                "description": "RGB Optik Mouse",
-                "price": 750.0,
-                "stock": 25,
-                "is_active": True,
-                "created_at": now.isoformat(),
-                "category_ids": [1],
-                "categories": [{"id": 1, "name": "Gaming", "description": None, "created_at": now.isoformat()}],
-            }
-            product = db.add({
-                "name": "Oyuncu Faresi",
-                "description": "RGB Optik Mouse",
-                "price": 750.0,
-                "stock": 25,
-                "category_ids": [1],
-                "is_active": True,
-            })
-            assert product["id"] == 10
-            assert product["price"] == 750.0
-            assert product["category_ids"] == [1]
-
-
-# ==============================================================================
-# 6. Atomik Sipariş ve Stok Yönetimi Testleri (Transactional)
-# ==============================================================================
-def test_postgres_order_atomic_insufficient_stock():
-    """
-    Yetersiz stok durumunda create_order_atomic metodunun ValueError fırlattığını doğrular.
-    """
-    db = PostgresDatabase()
-
-    with patch.object(db, "_get_connection") as mock_get_conn:
-        mock_conn = MagicMock()
-        mock_cursor = MagicMock()
-        # Ürünün stoğu 2 ama istenen 5
-        mock_cursor.fetchone.return_value = {
-            "id": 1,
-            "name": "Klavye",
-            "price": 500.0,
-            "stock": 2,
-            "is_active": True,
-        }
-        mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
-        mock_get_conn.return_value.__enter__.return_value = mock_conn
-
-        with pytest.raises(ValueError, match="Yetersiz stok"):
-            db.create_order_atomic(
-                customer_email="test@musteri.com",
-                items_data=[{"product_id": 1, "quantity": 5}],
-            )
-
-
-def test_postgres_order_status_update_restores_stock():
-    """
-    Sipariş durumu CANCELLED yapıldığında ürün stoklarının geri yüklendiğini test eder.
-    """
-    db = PostgresDatabase()
-    now = datetime.now(timezone.utc)
-
-    mock_order = {
-        "id": 99,
-        "customer_email": "test@musteri.com",
-        "total_amount": 1000.0,
-        "status": "PENDING",
-        "created_at": now.isoformat(),
-        "items": [{"id": 1, "product_id": 10, "quantity": 2, "unit_price": 500.0}],
-    }
-
-    with patch.object(db, "get_order_by_id", side_effect=[mock_order, {**mock_order, "status": "CANCELLED"}]):
-        with patch.object(db, "_get_connection") as mock_get_conn:
-            mock_conn = MagicMock()
-            mock_cursor = MagicMock()
-            mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
-            mock_get_conn.return_value.__enter__.return_value = mock_conn
-
-            updated = db.update_order_status_atomic(99, "CANCELLED")
-            assert updated["status"] == "CANCELLED"
-
-            # Stok artırma UPDATE sorgusunun çağrıldığını doğrula
-            stock_restore_call = any(
-                "UPDATE products SET stock = stock +" in str(call) for call in mock_cursor.execute.call_args_list
-            )
-            assert stock_restore_call is True
+    restored_prod = fake.get_by_id(1)
+    assert restored_prod is not None
+    assert restored_prod["stock"] == 10

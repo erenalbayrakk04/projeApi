@@ -2,11 +2,14 @@
 ==============================================================================
 Pytest Global Test Yapılandırması (Global Test Configuration & Fixtures)
 ==============================================================================
-Bu modül, testler çalışırken veritabanının (SQLite veya PostgreSQL)
-her test öncesinde ve sonrasında izole edilmesini, temizlenmesini ve
-seed verilerinin tutarlı şekilde yeniden yüklenmesini garanti eder.
+Bu modül, testler çalışırken izole SQLite test veritabanının kullanılmasını
+ve her test öncesi/sonrası temizlenmesini garanti eder.
 ==============================================================================
 """
+
+import os
+# Test çalışırken izole SQLite test veritabanını kullan
+os.environ["DB_TYPE"] = "sqlite"
 
 import pytest
 from database import db
