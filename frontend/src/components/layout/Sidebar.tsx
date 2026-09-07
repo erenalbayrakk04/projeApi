@@ -64,7 +64,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onSelectTab }) => 
       {/* Footer Info & API Docs Link */}
       <div className="p-4 border-t border-slate-800 bg-slate-950/20 space-y-3">
         <a
-          href="http://127.0.0.1:8000/docs"
+          href="/docs"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-between w-full px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-slate-800 text-xs text-slate-300 transition-colors border border-slate-700/60"

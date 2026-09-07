@@ -149,6 +149,7 @@ jobs:
           script: |
             mkdir -p ${{ secrets.WORK_DIR }}
             cd ${{ secrets.WORK_DIR }}
+            if [ -d .git ]; then git pull origin main || git pull || true; fi
             echo "📥 Yeni Docker İmajları Çekiliyor (Backend & Frontend)..."
             sudo docker compose pull || docker compose pull || true
             echo "🚀 Konteynerler Başlatılıyor..."
