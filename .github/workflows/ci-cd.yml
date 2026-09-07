@@ -1,0 +1,85 @@
+name: CI/CD Pipeline & Quality Gate
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  # ==============================================================================
+  # 1. BACKEND TESTLERİ (Pytest Unit & Integration Tests)
+  # ==============================================================================
+  backend-tests:
+    name: 🐍 Backend Pytest Test Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Depoyu Klonla (Checkout)
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Python 3.11 Kurulumu
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: 📦 Python Bağımlılıklarını Yükle
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 🧪 Pytest Testlerini Koştur (48 Test)
+        env:
+          DB_TYPE: sqlite
+        run: |
+          python -m pytest -v
+
+  # ==============================================================================
+  # 2. FRONTEND DERLEME VE TİP DENETİMİ (React + TypeScript + Vite)
+  # ==============================================================================
+  frontend-build:
+    name: ⚛️ Frontend Build & Typecheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Depoyu Klonla (Checkout)
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Node.js 20 Kurulumu
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 Node.js Bağımlılıklarını Yükle
+        working-directory: frontend
+        run: npm ci
+
+      - name: 🔨 TypeScript Tip Kontrolü ve Vite Derlemesi
+        working-directory: frontend
+        run: npm run build
+
+  # ==============================================================================
+  # 3. GÜVENLİ DAĞITIM KİLİDİ (Deployment Gate)
+  # Yalnızca backend-tests VE frontend-build %100 başarılı olursa çalışır!
+  # Testlerden biri dahi patlarsa bu adım GitHub tarafından otomatik engellenir.
+  # ==============================================================================
+  deploy:
+    name: 🚀 Production Deployment Gate
+    needs: [backend-tests, frontend-build]
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Depoyu Klonla (Checkout)
+        uses: actions/checkout@v4
+
+      - name: 🛡️ Kalite Kilidi Kontrolü (Quality Gate Passed)
+        run: |
+          echo "========================================================"
+          echo "✅ TÜM TESTLER VE DERLEMELER %100 BAŞARIYLA GEÇTİ!"
+          echo "🛡️ Kalite Kilidi (Quality Gate) Onaylandı."
+          echo "🚀 Canlıya (Production) dağıtım başlatılabilir."
+          echo "========================================================"
