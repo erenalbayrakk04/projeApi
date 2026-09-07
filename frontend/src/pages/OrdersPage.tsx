@@ -89,17 +89,17 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({
   return (
     <div className="space-y-6">
       {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5 text-emerald-600" />
+          <h3 className="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+            <ShoppingCart className="w-5 h-5 text-emerald-600 shrink-0" />
             <span>Sipariş Listesi ({filteredOrders.length})</span>
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">
             Atomik stok düşümleri, fiyat hesaplamaları ve sipariş yaşam döngüsü.
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} leftIcon={<PlusCircle className="w-4 h-4" />}>
+        <Button onClick={() => setIsModalOpen(true)} leftIcon={<PlusCircle className="w-4 h-4" />} className="w-full sm:w-auto justify-center">
           Yeni Sipariş Oluştur
         </Button>
       </div>

@@ -136,7 +136,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
               return (
                 <div
                   key={field.id}
-                  className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center gap-3 text-xs"
+                  className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-3 text-xs"
                 >
                   {/* Product Select */}
                   <div className="flex-1 w-full">
@@ -152,41 +152,41 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                     </select>
                   </div>
 
-                  {/* Quantity Stepper */}
-                  <div className="w-28 flex flex-col">
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder="Adet"
-                      className={`w-full px-3 py-2 rounded-lg border bg-white font-semibold outline-none focus:ring-2 ${
-                        isOverStock
-                          ? 'border-rose-400 focus:ring-rose-400 text-rose-600'
-                          : 'border-slate-200 focus:ring-emerald-400'
-                      }`}
-                      {...register(`items.${idx}.quantity` as const)}
-                    />
-                  </div>
+                  {/* Quantity Stepper + Subtotal + Remove Button */}
+                  <div className="flex items-center justify-between w-full sm:w-auto gap-2.5 sm:gap-3">
+                    <div className="w-24 sm:w-28 flex flex-col">
+                      <input
+                        type="number"
+                        min="1"
+                        placeholder="Adet"
+                        className={`w-full px-3 py-2 rounded-lg border bg-white font-semibold outline-none focus:ring-2 ${
+                          isOverStock
+                            ? 'border-rose-400 focus:ring-rose-400 text-rose-600'
+                            : 'border-slate-200 focus:ring-emerald-400'
+                        }`}
+                        {...register(`items.${idx}.quantity` as const)}
+                      />
+                    </div>
 
-                  {/* Item Subtotal */}
-                  <div className="w-24 text-right font-bold text-slate-700">
-                    {currentProduct
-                      ? `${(currentProduct.price * currentQty).toLocaleString('tr-TR', {
-                          minimumFractionDigits: 2,
-                        })} ₺`
-                      : '0.00 ₺'}
-                  </div>
+                    <div className="w-20 sm:w-24 text-right font-bold text-slate-700">
+                      {currentProduct
+                        ? `${(currentProduct.price * currentQty).toLocaleString('tr-TR', {
+                            minimumFractionDigits: 2,
+                          })} ₺`
+                        : '0.00 ₺'}
+                    </div>
 
-                  {/* Remove Button */}
-                  {fields.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => remove(idx)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
-                      title="Kalemi Sil"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
+                    {fields.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => remove(idx)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors shrink-0"
+                        title="Kalemi Sil"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}

@@ -12,7 +12,7 @@ export const LowStockAlert: React.FC<LowStockAlertProps> = ({ products, onViewAl
   const lowStock = products.filter((p) => p.stock <= 10).slice(0, 5);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+    <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <AlertCircle className="w-5 h-5 text-amber-500" />
@@ -33,7 +33,7 @@ export const LowStockAlert: React.FC<LowStockAlertProps> = ({ products, onViewAl
       ) : (
         <div className="divide-y divide-slate-100">
           {lowStock.map((prod) => (
-            <div key={prod.id} className="py-3 flex items-center justify-between text-xs">
+            <div key={prod.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-4 text-xs">
               <div>
                 <span className="font-semibold text-slate-800">{prod.name}</span>
                 <div className="flex items-center gap-1.5 mt-0.5">
@@ -44,7 +44,7 @@ export const LowStockAlert: React.FC<LowStockAlertProps> = ({ products, onViewAl
                   ))}
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
                 <span className="font-bold text-slate-700">
                   {prod.price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                 </span>

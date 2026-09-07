@@ -55,13 +55,13 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
     >
       <div className="space-y-6">
         {/* Info Grid */}
-        <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
           <div className="space-y-1">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
               Müşteri E-Posta
             </span>
-            <div className="flex items-center gap-1.5 font-semibold text-slate-800">
-              <Mail className="w-3.5 h-3.5 text-slate-400" />
+            <div className="flex items-center gap-1.5 font-semibold text-slate-800 break-all">
+              <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               <span>{order.customer_email}</span>
             </div>
           </div>
@@ -71,7 +71,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               Sipariş Tarihi
             </span>
             <div className="flex items-center gap-1.5 text-slate-600">
-              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+              <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               <span>{new Date(order.created_at).toLocaleString('tr-TR')}</span>
             </div>
           </div>
@@ -80,36 +80,36 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
         {/* Order Items Table */}
         <div className="space-y-2">
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
-            <Package className="w-4 h-4 text-emerald-600" />
+            <Package className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>Sipariş Kalemleri ({order.items.length})</span>
           </h4>
 
-          <div className="border border-slate-200 rounded-xl overflow-hidden">
-            <table className="w-full text-left text-xs">
+          <div className="border border-slate-200 rounded-xl overflow-x-auto">
+            <table className="w-full text-left text-xs min-w-[420px]">
               <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
                 <tr>
-                  <th className="py-2.5 px-4">Ürün</th>
-                  <th className="py-2.5 px-4 text-center">Adet</th>
-                  <th className="py-2.5 px-4 text-right">Birim Fiyat</th>
-                  <th className="py-2.5 px-4 text-right">Ara Toplam</th>
+                  <th className="py-2.5 px-3 sm:px-4">Ürün</th>
+                  <th className="py-2.5 px-3 sm:px-4 text-center">Adet</th>
+                  <th className="py-2.5 px-3 sm:px-4 text-right">Birim Fiyat</th>
+                  <th className="py-2.5 px-3 sm:px-4 text-right">Ara Toplam</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {order.items.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/50">
-                    <td className="py-3 px-4 font-semibold text-slate-800">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-semibold text-slate-800">
                       {getProductName(item.product_id)}
                       <span className="text-[10px] text-slate-400 block font-normal font-mono">
-                        Ürün ID: #{item.product_id}
+                         #{item.product_id}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-center font-bold text-slate-700">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-center font-bold text-slate-700">
                       {item.quantity} Adet
                     </td>
-                    <td className="py-3 px-4 text-right font-medium text-slate-600">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-right font-medium text-slate-600">
                       {item.unit_price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                     </td>
-                    <td className="py-3 px-4 text-right font-bold text-slate-800">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-right font-bold text-slate-800">
                       {(item.quantity * item.unit_price).toLocaleString('tr-TR', {
                         minimumFractionDigits: 2,
                       })}{' '}
@@ -120,10 +120,10 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               </tbody>
               <tfoot className="bg-slate-50/80 border-t border-slate-200 font-bold">
                 <tr>
-                  <td colSpan={3} className="py-3 px-4 text-right text-slate-600 uppercase text-[11px]">
-                    Genel Toplam Tutar:
+                  <td colSpan={3} className="py-2.5 sm:py-3 px-3 sm:px-4 text-right text-slate-600 uppercase text-[11px]">
+                    Genel Toplam:
                   </td>
-                  <td className="py-3 px-4 text-right text-emerald-700 text-sm font-extrabold">
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-right text-emerald-700 text-sm font-extrabold">
                     {order.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                   </td>
                 </tr>

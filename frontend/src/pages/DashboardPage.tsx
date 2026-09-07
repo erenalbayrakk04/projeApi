@@ -40,22 +40,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const isLoading = pLoading || cLoading || oLoading;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Welcome Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 to-slate-800 text-white p-6 rounded-2xl shadow-sm border border-slate-700/50">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 to-slate-800 text-white p-5 sm:p-6 rounded-2xl shadow-sm border border-slate-700/50">
         <div>
-          <h2 className="text-xl font-bold tracking-tight">Hoş Geldiniz! 👋</h2>
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight">Hoş Geldiniz! 👋</h2>
           <p className="text-xs text-slate-300 mt-1 max-w-lg">
             FastAPI RESTful mimarisine bağlı ürün, çoklu kategori ve sipariş yönetim paneli.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
           <Button
             variant="outline"
             size="sm"
             onClick={onOpenNewProduct}
             leftIcon={<PlusCircle className="w-4 h-4 text-emerald-400" />}
-            className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700"
+            className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700 text-xs flex-1 sm:flex-none justify-center"
           >
             Yeni Ürün
           </Button>
@@ -63,6 +63,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             size="sm"
             onClick={onOpenNewOrder}
             leftIcon={<ShoppingBag className="w-4 h-4" />}
+            className="text-xs flex-1 sm:flex-none justify-center"
           >
             Yeni Sipariş Ver
           </Button>
@@ -71,8 +72,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
       {/* Metrics Cards */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-          <Skeleton className="h-28 rounded-2xl" count={4} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-5">
+          <Skeleton className="h-24 sm:h-28 rounded-2xl" count={4} />
         </div>
       ) : (
         <StatsCards
@@ -83,7 +84,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       )}
 
       {/* 2-Column Grid for Recent Orders & Low Stock */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {isLoading ? (
           <>
             <Skeleton className="h-64 rounded-2xl" />

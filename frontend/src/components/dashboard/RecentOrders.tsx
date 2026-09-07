@@ -27,7 +27,7 @@ export const RecentOrders: React.FC<RecentOrdersProps> = ({ orders, onViewAll })
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+    <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <ShoppingCart className="w-5 h-5 text-slate-600" />
@@ -46,16 +46,18 @@ export const RecentOrders: React.FC<RecentOrdersProps> = ({ orders, onViewAll })
       ) : (
         <div className="divide-y divide-slate-100">
           {recent.map((order) => (
-            <div key={order.id} className="py-3 flex items-center justify-between text-xs">
-              <div>
-                <span className="font-bold text-slate-800">#{order.id}</span>
-                <span className="text-slate-400 mx-1.5">&bull;</span>
-                <span className="text-slate-600 font-medium">{order.customer_email}</span>
+            <div key={order.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-4 text-xs">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 truncate">
+                  <span className="font-bold text-slate-800 shrink-0">#{order.id}</span>
+                  <span className="text-slate-400">&bull;</span>
+                  <span className="text-slate-600 font-medium truncate">{order.customer_email}</span>
+                </div>
                 <p className="text-[10px] text-slate-400 mt-0.5">
                   {new Date(order.created_at).toLocaleString('tr-TR')}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
                 <span className="font-bold text-slate-800">
                   {order.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                 </span>

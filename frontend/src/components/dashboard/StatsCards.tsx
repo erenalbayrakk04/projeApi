@@ -57,29 +57,29 @@ export const StatsCards: React.FC<StatsCardsProps> = ({
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-5">
       {cards.map((card, idx) => {
         const Icon = card.icon;
         return (
           <div
             key={idx}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow"
+            className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow"
           >
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">
                 {card.title}
               </p>
-              <h3 className="text-2xl font-bold text-slate-800 mt-1">
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mt-0.5 sm:mt-1">
                 {card.value}
               </h3>
-              <p className="text-xs text-slate-400 mt-1 font-medium">
+              <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1 font-medium">
                 {card.subtitle}
               </p>
             </div>
             <div
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center ${card.lightBg}`}
+              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 ${card.lightBg}`}
             >
-              <Icon className="w-6 h-6" />
+              <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
           </div>
         );

@@ -33,25 +33,25 @@ export const ProductTable: React.FC<ProductTableProps> = ({
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse min-w-[650px]">
           <thead>
             <tr className="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-              <th className="py-3.5 px-6">ID</th>
-              <th className="py-3.5 px-6">Ürün Bilgisi</th>
-              <th className="py-3.5 px-6">Kategoriler</th>
-              <th className="py-3.5 px-6">Birim Fiyat</th>
-              <th className="py-3.5 px-6">Stok Durumu</th>
-              <th className="py-3.5 px-6">Aktiflik</th>
-              <th className="py-3.5 px-6 text-right">Eylemler</th>
+              <th className="py-3 px-4 sm:py-3.5 sm:px-6">ID</th>
+              <th className="py-3 px-4 sm:py-3.5 sm:px-6">Ürün Bilgisi</th>
+              <th className="py-3 px-4 sm:py-3.5 sm:px-6">Kategoriler</th>
+              <th className="py-3 px-4 sm:py-3.5 sm:px-6">Birim Fiyat</th>
+              <th className="py-3 px-4 sm:py-3.5 sm:px-6">Stok Durumu</th>
+              <th className="py-3 px-4 sm:py-3.5 sm:px-6">Aktiflik</th>
+              <th className="py-3 px-4 sm:py-3.5 sm:px-6 text-right">Eylemler</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-xs">
             {products.map((product) => (
               <tr key={product.id} className="hover:bg-slate-50/50 transition-colors">
-                <td className="py-3.5 px-6 font-mono font-bold text-slate-400">
+                <td className="py-3 px-4 sm:py-3.5 sm:px-6 font-mono font-bold text-slate-400">
                   #{product.id}
                 </td>
-                <td className="py-3.5 px-6">
+                <td className="py-3 px-4 sm:py-3.5 sm:px-6">
                   <div>
                     <span className="font-bold text-slate-800 text-sm">
                       {product.name}
@@ -63,7 +63,7 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                     )}
                   </div>
                 </td>
-                <td className="py-3.5 px-6">
+                <td className="py-3 px-4 sm:py-3.5 sm:px-6">
                   <div className="flex flex-wrap gap-1 max-w-xs">
                     {product.categories && product.categories.length > 0 ? (
                       product.categories.map((c) => (
@@ -79,12 +79,12 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                     )}
                   </div>
                 </td>
-                <td className="py-3.5 px-6">
+                <td className="py-3 px-4 sm:py-3.5 sm:px-6">
                   <span className="font-bold text-slate-800 text-sm">
                     {product.price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
                   </span>
                 </td>
-                <td className="py-3.5 px-6">
+                <td className="py-3 px-4 sm:py-3.5 sm:px-6">
                   {product.stock === 0 ? (
                     <Badge variant="danger">Tükendi (0)</Badge>
                   ) : product.stock <= 10 ? (
@@ -93,7 +93,7 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                     <span className="font-semibold text-slate-700">{product.stock} Adet</span>
                   )}
                 </td>
-                <td className="py-3.5 px-6">
+                <td className="py-3 px-4 sm:py-3.5 sm:px-6">
                   <button
                     onClick={() => onToggleActive(product)}
                     className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity"
@@ -112,7 +112,7 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                     )}
                   </button>
                 </td>
-                <td className="py-3.5 px-6 text-right">
+                <td className="py-3 px-4 sm:py-3.5 sm:px-6 text-right">
                   <div className="flex items-center justify-end gap-1.5">
                     <button
                       onClick={() => onEdit(product)}

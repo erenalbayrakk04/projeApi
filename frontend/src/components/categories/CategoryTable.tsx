@@ -30,23 +30,23 @@ export const CategoryTable: React.FC<CategoryTableProps> = ({
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse min-w-[500px]">
           <thead>
             <tr className="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-              <th className="py-3.5 px-6">ID</th>
-              <th className="py-3.5 px-6">Kategori Adı</th>
-              <th className="py-3.5 px-6">Açıklama</th>
-              <th className="py-3.5 px-6">Oluşturulma Tarihi</th>
-              <th className="py-3.5 px-6 text-right">Eylemler</th>
+              <th className="py-3 px-4 sm:py-3.5 sm:px-6">ID</th>
+              <th className="py-3 px-4 sm:py-3.5 sm:px-6">Kategori Adı</th>
+              <th className="py-3 px-4 sm:py-3.5 sm:px-6">Açıklama</th>
+              <th className="py-3 px-4 sm:py-3.5 sm:px-6">Oluşturulma Tarihi</th>
+              <th className="py-3 px-4 sm:py-3.5 sm:px-6 text-right">Eylemler</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-xs">
             {categories.map((category) => (
               <tr key={category.id} className="hover:bg-slate-50/50 transition-colors">
-                <td className="py-3.5 px-6 font-mono font-bold text-slate-500">
+                <td className="py-3 px-4 sm:py-3.5 sm:px-6 font-mono font-bold text-slate-500">
                   #{category.id}
                 </td>
-                <td className="py-3.5 px-6">
+                <td className="py-3 px-4 sm:py-3.5 sm:px-6">
                   <div className="flex items-center gap-2">
                     <Tag className="w-4 h-4 text-emerald-500 shrink-0" />
                     <span className="font-bold text-slate-800 text-sm">
@@ -54,16 +54,16 @@ export const CategoryTable: React.FC<CategoryTableProps> = ({
                     </span>
                   </div>
                 </td>
-                <td className="py-3.5 px-6 text-slate-500 max-w-xs truncate">
+                <td className="py-3 px-4 sm:py-3.5 sm:px-6 text-slate-500 max-w-xs truncate">
                   {category.description || <span className="text-slate-300 italic">Açıklama yok</span>}
                 </td>
-                <td className="py-3.5 px-6 text-slate-500">
+                <td className="py-3 px-4 sm:py-3.5 sm:px-6 text-slate-500">
                   <div className="flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-slate-400" />
                     <span>{new Date(category.created_at).toLocaleString('tr-TR')}</span>
                   </div>
                 </td>
-                <td className="py-3.5 px-6 text-right">
+                <td className="py-3 px-4 sm:py-3.5 sm:px-6 text-right">
                   <div className="flex items-center justify-end gap-1.5">
                     <button
                       onClick={() => onEdit(category)}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   LayoutDashboard,
   Package,
@@ -6,6 +6,7 @@ import {
   ShoppingCart,
   BookOpen,
   Store,
+  X,
 } from 'lucide-react';
 
 export type NavTab = 'dashboard' | 'products' | 'categories' | 'orders';
@@ -13,9 +14,16 @@ export type NavTab = 'dashboard' | 'products' | 'categories' | 'orders';
 interface SidebarProps {
   currentTab: NavTab;
   onSelectTab: (tab: NavTab) => void;
+  isOpenMobile?: boolean;
+  onCloseMobile?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onSelectTab }) => {
+export const Sidebar: React.FC<SidebarProps> = ({
+  currentTab,
+  onSelectTab,
+  isOpenMobile = false,
+  onCloseMobile,
+}) => {
   const navItems = [
     { id: 'dashboard' as NavTab, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'products' as NavTab, label: 'Ürün Yönetimi', icon: Package },
@@ -23,17 +31,42 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onSelectTab }) => 
     { id: 'orders' as NavTab, label: 'Siparişler', icon: ShoppingCart },
   ];
 
-  return (
-    <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col shrink-0 h-screen sticky top-0 border-r border-slate-800">
+  // Mobil menü açıkken ESC tuşu ile kapatma
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpenMobile && onCloseMobile) {
+        onCloseMobile();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpenMobile, onCloseMobile]);
+
+  // Sidebar İçerik Bloğu (Ortak)
+  const sidebarContent = (
+    <div className="flex flex-col h-full bg-slate-900 text-slate-300">
       {/* Brand Header */}
-      <div className="h-16 flex items-center px-6 gap-3 border-b border-slate-800 bg-slate-950/40">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-900/30">
-          <Store className="w-5 h-5" />
+      <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800 bg-slate-950/40">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-900/30 shrink-0">
+            <Store className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-sm font-bold text-white tracking-wide">ProjeApi</h1>
+            <p className="text-[11px] text-emerald-400 font-medium">E-Commerce SPA</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-sm font-bold text-white tracking-wide">ProjeApi</h1>
-          <p className="text-[11px] text-emerald-400 font-medium">E-Commerce SPA</p>
-        </div>
+
+        {/* Mobilde Kapatma Butonu */}
+        {onCloseMobile && (
+          <button
+            onClick={onCloseMobile}
+            className="lg:hidden p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+            title="Menüyü Kapat"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Nav Menu */}
@@ -47,7 +80,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onSelectTab }) => 
           return (
             <button
               key={item.id}
-              onClick={() => onSelectTab(item.id)}
+              onClick={() => {
+                onSelectTab(item.id);
+                if (onCloseMobile) onCloseMobile();
+              }}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                 isActive
                   ? 'bg-emerald-600/10 text-emerald-400 border border-emerald-500/20 shadow-sm'
@@ -81,6 +117,30 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onSelectTab }) => 
           FastAPI &amp; React 18 &bull; v1.1.0
         </div>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* 1. Masaüstü Sabit Sidebar (lg ve üzeri) */}
+      <aside className="hidden lg:flex w-64 flex-col shrink-0 h-screen sticky top-0 border-r border-slate-800">
+        {sidebarContent}
+      </aside>
+
+      {/* 2. Mobil / Tablet Slide-over Çekmece (lg altı) */}
+      {isOpenMobile && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* Karartmalı Arka Plan (Backdrop) */}
+          <div
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity animate-in fade-in"
+            onClick={onCloseMobile}
+          />
+          {/* Çekmece Menü */}
+          <div className="fixed inset-y-0 left-0 w-72 max-w-[85vw] shadow-2xl border-r border-slate-800 z-10 animate-in slide-in-from-left duration-200">
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+    </>
   );
 };
