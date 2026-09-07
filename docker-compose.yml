@@ -29,6 +29,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: ghcr.io/erenalbayrakk04/projeapi:latest
     container_name: proje_api
     restart: unless-stopped
     ports:
@@ -45,6 +46,21 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  # ============================================================================
+  # 3. React Frontend Servisi (projeApi Dashboard)
+  # ============================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: ghcr.io/erenalbayrakk04/projeapi-frontend:latest
+    container_name: proje_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
 
 # ==============================================================================
 # Kalıcı Veri Alanı (Named Volume)

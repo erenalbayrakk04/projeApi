@@ -1,4 +1,4 @@
-name: CI/CD Pipeline & VPS Delivery
+name: CI/CD Pipeline & Fullstack VPS Delivery
 
 on:
   push:
@@ -66,10 +66,10 @@ jobs:
         run: npm run build
 
   # ==============================================================================
-  # 3. DOCKER PAKETLEME VE GHCR YÜKLEME (Build & Push to GHCR)
+  # 3. DOCKER PAKETLEME VE GHCR YÜKLEME (Backend + Frontend)
   # ==============================================================================
   deploy-to-ghcr:
-    name: 🐳 Docker Build & Push to GHCR
+    name: 🐳 Build & Push Docker Images to GHCR
     needs: [backend-tests, frontend-build]
     if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -88,8 +88,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🏷️ Docker Etiket ve Metadata Hazırlığı
-        id: meta
+      # --- 3A: Backend API İmajı ---
+      - name: 🏷️ Backend Metadata
+        id: meta-backend
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}
@@ -97,23 +98,43 @@ jobs:
             type=raw,value=latest
             type=sha,format=short
 
-      - name: 🚀 Docker İmajını Derle ve GHCR'ye Gönder (Push)
+      - name: 🚀 Backend İmajını Derle ve GHCR'ye Yükle
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # --- 3B: Frontend Dashboard İmajı ---
+      - name: 🏷️ Frontend Metadata
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}-frontend
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      - name: 🚀 Frontend İmajını Derle ve GHCR'ye Yükle
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
   # ==============================================================================
-  # 4. ORACLE VPS CANLIYA ALMA (Automated SSH Deployment)
-  # GHCR imajı hazır olunca Oracle sunucusuna SSH ile bağlanır ve Docker'ı günceller.
+  # 4. ORACLE VPS CANLIYA ALMA (Fullstack Automated SSH Deployment)
   # ==============================================================================
   deploy-to-vps:
-    name: 🚀 Deploy to Oracle VPS
+    name: 🚀 Deploy Fullstack to Oracle VPS
     needs: [deploy-to-ghcr]
     if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -128,8 +149,8 @@ jobs:
           script: |
             mkdir -p ${{ secrets.WORK_DIR }}
             cd ${{ secrets.WORK_DIR }}
-            echo "📥 Yeni Docker İmajı Çekiliyor..."
+            echo "📥 Yeni Docker İmajları Çekiliyor (Backend & Frontend)..."
             sudo docker compose pull || docker compose pull || true
             echo "🚀 Konteynerler Başlatılıyor..."
             sudo docker compose up -d || docker compose up -d
-            echo "✅ Canlıya Dağıtım (Deploy) Başarıyla Tamamlandı!"
+            echo "✅ Fullstack Canlıya Dağıtım (Deploy) Başarıyla Tamamlandı!"

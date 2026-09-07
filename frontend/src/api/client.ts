@@ -1,10 +1,18 @@
 import axios from 'axios';
 
-// FastAPI backend base URL'i
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+// FastAPI backend base URL'i (Dinamik Hostname Çözümleme)
+const getBaseUrl = (): string => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return `http://${window.location.hostname}:8000`;
+  }
+  return 'http://127.0.0.1:8000';
+};
 
 export const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: getBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
@@ -32,7 +40,7 @@ apiClient.interceptors.response.use(
         errorMessage = 'Sunucu hatası oluştu (500).';
       }
     } else if (error.request) {
-      errorMessage = 'Sunucuya bağlanılamadı. FastAPI sunucusunun (http://127.0.0.1:8000) açık olduğundan emin olun.';
+      errorMessage = 'Sunucuya bağlanılamadı. FastAPI sunucusunun açık olduğundan emin olun.';
     }
 
     return Promise.reject(new Error(errorMessage));
