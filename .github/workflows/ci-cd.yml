@@ -1,4 +1,4 @@
-name: CI/CD Pipeline & GHCR Delivery
+name: CI/CD Pipeline & VPS Delivery
 
 on:
   push:
@@ -66,9 +66,7 @@ jobs:
         run: npm run build
 
   # ==============================================================================
-  # 3. GÜVENLİ DAĞITIM & GHCR DOCKER PAKETLEME (Quality Gate & GHCR Push)
-  # Yalnızca backend-tests VE frontend-build %100 başarılı olursa çalışır!
-  # Testler geçerse Docker imajını derleyip GitHub Container Registry'ye (ghcr.io) yükler.
+  # 3. DOCKER PAKETLEME VE GHCR YÜKLEME (Build & Push to GHCR)
   # ==============================================================================
   deploy-to-ghcr:
     name: 🐳 Docker Build & Push to GHCR
@@ -110,9 +108,28 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: 🛡️ Başarı Bildirimi
-        run: |
-          echo "========================================================"
-          echo "🎉 DOCKER İMAJI BAŞARIYLA GHCR'YE YÜKLENDİ!"
-          echo "📦 İmaj Adresi: ghcr.io/${{ github.repository }}:latest"
-          echo "========================================================"
+  # ==============================================================================
+  # 4. ORACLE VPS CANLIYA ALMA (Automated SSH Deployment)
+  # GHCR imajı hazır olunca Oracle sunucusuna SSH ile bağlanır ve Docker'ı günceller.
+  # ==============================================================================
+  deploy-to-vps:
+    name: 🚀 Deploy to Oracle VPS
+    needs: [deploy-to-ghcr]
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🔐 SSH ile Sunucuya Bağlan ve Konteynerleri Güncelle
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            mkdir -p ${{ secrets.WORK_DIR }}
+            cd ${{ secrets.WORK_DIR }}
+            echo "📥 Yeni Docker İmajı Çekiliyor..."
+            sudo docker compose pull || docker compose pull || true
+            echo "🚀 Konteynerler Başlatılıyor..."
+            sudo docker compose up -d || docker compose up -d
+            echo "✅ Canlıya Dağıtım (Deploy) Başarıyla Tamamlandı!"
