@@ -164,8 +164,15 @@ def health_check() -> Dict[str, Any]:
     Toplam aktif ürün, kategori ve sipariş sayılarını dinamik olarak raporlar.
     """
     active_db = get_database()
-    db_class = active_db.__class__.__name__
-    storage_name = "PostgreSQL" if "Postgres" in db_class else "SQLite (products.db)"
+    if hasattr(active_db, "db_url"):
+        if active_db.db_url.startswith("postgresql"):
+            storage_name = "PostgreSQL"
+        elif active_db.db_url.startswith("sqlite"):
+            storage_name = "SQLite"
+        else:
+            storage_name = "SQLAlchemy"
+    else:
+        storage_name = "FakeRepository (In-Memory)"
 
     total_products = len(active_db.get_all())
     total_categories = len(active_db.get_all_categories())
