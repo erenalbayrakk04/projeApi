@@ -1,10 +1,14 @@
-name: CI/CD Pipeline & Quality Gate
+name: CI/CD Pipeline & GHCR Delivery
 
 on:
   push:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   # ==============================================================================
@@ -62,12 +66,12 @@ jobs:
         run: npm run build
 
   # ==============================================================================
-  # 3. GÜVENLİ DAĞITIM KİLİDİ (Deployment Gate)
+  # 3. GÜVENLİ DAĞITIM & GHCR DOCKER PAKETLEME (Quality Gate & GHCR Push)
   # Yalnızca backend-tests VE frontend-build %100 başarılı olursa çalışır!
-  # Testlerden biri dahi patlarsa bu adım GitHub tarafından otomatik engellenir.
+  # Testler geçerse Docker imajını derleyip GitHub Container Registry'ye (ghcr.io) yükler.
   # ==============================================================================
-  deploy:
-    name: 🚀 Production Deployment Gate
+  deploy-to-ghcr:
+    name: 🐳 Docker Build & Push to GHCR
     needs: [backend-tests, frontend-build]
     if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -76,10 +80,39 @@ jobs:
       - name: 📥 Depoyu Klonla (Checkout)
         uses: actions/checkout@v4
 
-      - name: 🛡️ Kalite Kilidi Kontrolü (Quality Gate Passed)
+      - name: ⚙️ Docker Buildx Kurulumu
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔑 GitHub Container Registry'ye (GHCR) Giriş Yap
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏷️ Docker Etiket ve Metadata Hazırlığı
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      - name: 🚀 Docker İmajını Derle ve GHCR'ye Gönder (Push)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🛡️ Başarı Bildirimi
         run: |
           echo "========================================================"
-          echo "✅ TÜM TESTLER VE DERLEMELER %100 BAŞARIYLA GEÇTİ!"
-          echo "🛡️ Kalite Kilidi (Quality Gate) Onaylandı."
-          echo "🚀 Canlıya (Production) dağıtım başlatılabilir."
+          echo "🎉 DOCKER İMAJI BAŞARIYLA GHCR'YE YÜKLENDİ!"
+          echo "📦 İmaj Adresi: ghcr.io/${{ github.repository }}:latest"
           echo "========================================================"
