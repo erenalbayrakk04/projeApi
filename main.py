@@ -35,6 +35,14 @@ from database import db, get_database
 from routers.products import router as products_router
 from routers.categories import router as categories_router
 from routers.orders import router as orders_router
+from events.base import event_bus
+from events.observers import (
+    CacheInvalidationObserver,
+    StockAlertObserver,
+    NotificationObserver,
+    AuditLogObserver,
+)
+from services.cache_service import cache_service
 
 
 # ==============================================================================
@@ -63,6 +71,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     # ------------------ SUNUCU BAŞLATMA (STARTUP) ------------------
     logger.info("E-Commerce Management API sunucusu başlatılıyor...")
+
+    # Observer Pattern: Gözlemcileri Event Bus'a kaydet
+    cache_observer = CacheInvalidationObserver()
+    stock_observer = StockAlertObserver(stock_threshold=10)
+    notification_observer = NotificationObserver()
+    audit_observer = AuditLogObserver()
+
+    event_bus.subscribe(cache_observer)
+    event_bus.subscribe(stock_observer)
+    event_bus.subscribe(notification_observer)
+    event_bus.subscribe(audit_observer)
+    logger.info(f"Observer Pattern: 4 adet gözlemci Event Bus'a kaydedildi (Toplam: {event_bus.observer_count}).")
 
     # Başlangıçta test yapabilmeniz için örnek ürün ve kategori verilerini yükle
     active_db = get_database()
@@ -160,7 +180,8 @@ def root() -> Dict[str, Any]:
 )
 def health_check() -> Dict[str, Any]:
     """
-    Servisin ve aktif veritabanının (SQLite / PostgreSQL) ayakta olup olmadığını kontrol eder.
+    Servisin, aktif veritabanının (SQLite / PostgreSQL), Redis önbellek katmanının
+    ve Observer Event Bus sisteminin durumunu kontrol eder.
     Toplam aktif ürün, kategori ve sipariş sayılarını dinamik olarak raporlar.
     """
     active_db = get_database()
@@ -177,12 +198,18 @@ def health_check() -> Dict[str, Any]:
     total_products = len(active_db.get_all())
     total_categories = len(active_db.get_all_categories())
     total_orders = len(active_db.get_all_orders())
+    cache_stats = cache_service.get_stats()
+
     return {
         "status": "healthy",
         "storage": storage_name,
         "total_active_records": total_products,
         "total_categories": total_categories,
         "total_orders": total_orders,
+        "cache": cache_stats,
+        "events": {
+            "registered_observers": event_bus.observer_count,
+        },
     }
 
 

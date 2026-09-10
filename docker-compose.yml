@@ -12,6 +12,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7-alpine
+    container_name: proje_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
   api:
     image: ghcr.io/erenalbayrakk04/projeapi:latest
     container_name: proje_api
@@ -23,10 +32,13 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-proje_db}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_secure_pass}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
     ports:
       - "8000:8000"
     depends_on:
       - postgres
+      - redis
 
   frontend:
     image: ghcr.io/erenalbayrakk04/projeapi-frontend:latest
@@ -39,3 +51,4 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
